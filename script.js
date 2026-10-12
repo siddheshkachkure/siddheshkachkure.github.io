@@ -68,4 +68,241 @@
   } else {
     revealTargets.forEach(el => el.classList.add('is-visible'));
   }
+
+  // Interactive HPC architecture workflow lab: schematic teaching views, not packet captures.
+  const workflowData = {
+    gpu: {
+      label:'WORKFLOW / COLLECTIVE COMMUNICATION',
+      title:'GPU-to-GPU traffic across a high-speed fabric',
+      summary:'A simplified distributed training path: ranks exchange tensor data through NCCL, which selects transports and algorithms according to the environment, topology and configuration.',
+      stages:['Rank / GPU','Collective','Network','Peer GPU'],
+      nodes:[
+        {id:'gpu0',x:35,y:110,w:205,h:135,title:'COMPUTE NODE A',sub:'Rank 0 · GPU 0',kind:'gpu'},
+        {id:'nccl',x:365,y:125,w:255,h:95,title:'NCCL COLLECTIVE',sub:'Reduce / All-reduce / All-gather',kind:'runtime'},
+        {id:'fabric',x:410,y:285,w:165,h:75,title:'HIGH-SPEED FABRIC',sub:'InfiniBand / Ethernet',kind:'network'},
+        {id:'gpu1',x:760,y:110,w:205,h:135,title:'COMPUTE NODE B',sub:'Rank 1 · GPU 1',kind:'gpu'}
+      ],
+      edges:[{from:'gpu0',to:'nccl',label:'GPU buffers'},{from:'nccl',to:'fabric',label:'cross-node transport'},{from:'fabric',to:'gpu1',label:'peer rank data'}],
+      steps:[
+        {heading:'GPU rank creates work',description:'The application launches GPU work and reaches a communication point, such as an all-reduce. Rank placement and GPU/NIC topology influence the best path.',note:'Confirm rank placement, GPU health, topology awareness and the expected collective size.',focus:'gpu0'},
+        {heading:'Collective runtime coordinates ranks',description:'A framework call reaches NCCL; communicator setup, protocol, algorithm and topology determine how participating ranks exchange tensors.',note:'Compare NCCL logs and environment settings with the expected transport; not every collective uses the same path.',focus:'nccl'},
+        {heading:'Data crosses the selected transport',description:'For inter-node peers, communication may use InfiniBand or Ethernet. Intra-node transfers can take a different path.',note:'Check NIC counters, link health, RDMA configuration, congestion and whether the path is intra-node or inter-node.',focus:'fabric'},
+        {heading:'Peer ranks complete the collective',description:'The receiving rank consumes the exchanged data and ranks proceed when the collective synchronization requirements are met.',note:'Look for straggler ranks, asymmetric node performance, retries, errors and collective timeouts across the job.',focus:'gpu1'}
+      ]
+    },
+    storage: {
+      label:'WORKFLOW / GPU DATA INGEST & CHECKPOINT',
+      title:'GPU-to-storage traffic through a client stack',
+      summary:'A common conceptual path for training reads or checkpoints. The exact route differs between parallel-filesystem clients, object SDKs, storage architecture and host/GPU I/O method.',
+      stages:['GPU / framework','I/O runtime','Client + fabric','Storage services'],
+      nodes:[
+        {id:'gpu0',x:30,y:112,w:195,h:122,title:'GPU WORKLOAD',sub:'Training / checkpoint',kind:'gpu'},
+        {id:'runtime',x:280,y:135,w:195,h:96,title:'I/O RUNTIME',sub:'POSIX / cuFile / SDK',kind:'runtime'},
+        {id:'fabric',x:535,y:285,w:170,h:75,title:'NETWORK FABRIC',sub:'TCP / supported RDMA',kind:'network'},
+        {id:'storage',x:760,y:112,w:205,h:122,title:'PARALLEL STORAGE',sub:'Metadata + data services',kind:'storage'}
+      ],
+      edges:[{from:'gpu0',to:'runtime',label:'buffer / I/O request'},{from:'runtime',to:'fabric',label:'client data path'},{from:'fabric',to:'storage',label:'request + payload'}],
+      steps:[
+        {heading:'Workload requests data',description:'The input pipeline reads training records or the framework writes a checkpoint. Access size, concurrency and metadata pattern shape the I/O profile.',note:'Characterize access pattern, file sizes, reader count, checkpoint cadence and aggregate demand.',focus:'gpu0'},
+        {heading:'Application chooses its I/O path',description:'The workload uses POSIX, a client library, an object SDK or a supported GPU-aware path such as cuFile/GDS where configured.',note:'Confirm the API, mount/client version, I/O method and whether the GPU-aware path is eligible.',focus:'runtime'},
+        {heading:'Request moves over host and fabric',description:'Depending on the stack, control and data traffic traverse the configured NIC, transport and client processes.',note:'Compare app timings with iperf3 and host metrics; keep isolated-network results separate from storage throughput.',focus:'fabric'},
+        {heading:'Storage resolves and serves data',description:'Storage services handle metadata and data operations and return payloads or persist writes. The internal route is product-specific.',note:'Correlate client latency with metadata, data service, media, queue depth and per-node imbalance.',focus:'storage'}
+      ]
+    },
+    gds: {
+      label:'WORKFLOW / GPU-DIRECT STORAGE',
+      title:'A supported GPU Direct Storage path',
+      summary:'GDS can enable supported storage-to-GPU or GPU-to-storage movement with fewer CPU bounce-buffer copies. Support depends on compatible GPU, driver, filesystem/client, transport and topology.',
+      stages:['Application buffer','cuFile / GDS','Supported data path','Storage'],
+      nodes:[
+        {id:'gpu0',x:30,y:118,w:195,h:120,title:'GPU MEMORY',sub:'Application buffer / HBM',kind:'gpu'},
+        {id:'gds',x:285,y:133,w:210,h:94,title:'GDS SOFTWARE PATH',sub:'cuFile + supported stack',kind:'runtime'},
+        {id:'fabric',x:540,y:285,w:170,h:75,title:'COMPATIBLE TRANSPORT',sub:'Platform dependent',kind:'network'},
+        {id:'storage',x:760,y:118,w:205,h:120,title:'STORAGE BACKEND',sub:'Supported filesystem / target',kind:'storage'}
+      ],
+      edges:[{from:'gpu0',to:'gds',label:'GPU buffer + I/O'},{from:'gds',to:'fabric',label:'eligible data path'},{from:'fabric',to:'storage',label:'storage payload'}],
+      steps:[
+        {heading:'Application identifies GPU I/O',description:'The application allocates or uses GPU memory and submits eligible I/O through a supported API such as cuFile.',note:'Confirm the actual application API; not every workload, operation or filesystem can use GDS.',focus:'gpu0'},
+        {heading:'GDS coordinates I/O',description:'The runtime and kernel/storage stack determine which implementation is available for the specific platform and operation.',note:'Check GPU/driver versions, GDS components, filesystem/client support and diagnostic output.',focus:'gds'},
+        {heading:'Eligible data path transfers payload',description:'On a supported direct path, data can move without a required CPU bounce-buffer copy. Other operations may stage through host memory or fall back.',note:'Use diagnostics and controlled measurements to establish the path; throughput alone does not prove GDS use.',focus:'fabric'},
+        {heading:'Validate end-to-end improvement',description:'The destination buffer becomes available to the workload, but benefits depend on I/O size, concurrency, topology and the real bottleneck.',note:'Compare baseline and GDS reads/writes for throughput, latency, CPU use and GPU starvation.',focus:'storage'}
+      ]
+    }
+  };
+  const svgNS='http://www.w3.org/2000/svg';
+  const scene=document.getElementById('architecture-scene');
+  const packetLayer=document.getElementById('packet-layer');
+  const stagebar=document.getElementById('flow-stagebar');
+  const flowTabs=[...document.querySelectorAll('.lab-tab')];
+  const playButton=document.getElementById('play-flow');
+  const stepButton=document.getElementById('step-flow');
+  const resetButton=document.getElementById('reset-flow');
+  const speedSlider=document.getElementById('speed-range');
+  let currentFlow='gpu',currentStep=0,animationFrame=0,lastTime=0,progress=0,running=false,speed=1;
+  let currentNodes=[],currentEdges=[],packetDots=[],svgPaths=[],focusNode='';
+  const svgEl=(tag,attrs={},textValue='')=>{
+    const el=document.createElementNS(svgNS,tag);
+    Object.entries(attrs).forEach(([key,value])=>el.setAttribute(key,String(value)));
+    if(textValue)el.textContent=textValue;
+    return el;
+  };
+  function addText(parent,x,y,txt,klass,extra={}){
+    parent.appendChild(svgEl('text',{x,y,class:klass,...extra},txt));
+  }
+  function findNode(id){return currentNodes.find(n=>n.id===id);}
+  function center(node,side){
+    if(side==='left')return{x:node.x,y:node.y+node.h/2};
+    if(side==='right')return{x:node.x+node.w,y:node.y+node.h/2};
+    if(side==='top')return{x:node.x+node.w/2,y:node.y};
+    return{x:node.x+node.w/2,y:node.y+node.h};
+  }
+  function buildPath(a,b,index){
+    let start,end;
+    if(index===1&&a.y<b.y){start=center(a,'bottom');end=center(b,'top');}
+    else if(index===1&&a.y>b.y){start=center(a,'top');end=center(b,'bottom');}
+    else{start=center(a,'right');end=center(b,'left');}
+    if(Math.abs(end.x-start.x)<30||Math.abs(end.y-start.y)>40){
+      const bendX=(start.x+end.x)/2;
+      return{d:`M ${start.x} ${start.y} C ${bendX} ${start.y}, ${bendX} ${end.y}, ${end.x} ${end.y}`,start,end};
+    }
+    return{d:`M ${start.x} ${start.y} L ${end.x} ${end.y}`,start,end};
+  }
+  function routePoint(route,t){
+    return{x:route.start.x+(route.end.x-route.start.x)*t,y:route.start.y+(route.end.y-route.start.y)*t};
+  }
+  function renderScene(){
+    if(!scene||!packetLayer)return;
+    scene.replaceChildren();packetLayer.replaceChildren();packetDots=[];svgPaths=[];
+    const data=workflowData[currentFlow];currentNodes=data.nodes;currentEdges=data.edges;
+    const defs=svgEl('defs');
+    const marker=svgEl('marker',{id:'flowArrow',markerWidth:8,markerHeight:8,refX:6,refY:3,orient:'auto',markerUnits:'strokeWidth'});
+    marker.appendChild(svgEl('path',{d:'M0,0 L0,6 L7,3 z',fill:'#68d9cf'}));defs.appendChild(marker);scene.appendChild(defs);
+    currentEdges.forEach((edge,index)=>{
+      const route=buildPath(findNode(edge.from),findNode(edge.to),index);
+      const path=svgEl('path',{d:route.d,class:'arch-path data-path','marker-end':'url(#flowArrow)'});
+      scene.appendChild(path);svgPaths.push({path,edge,route});
+      const mid=routePoint(route,.5);addText(scene,mid.x,mid.y-10,edge.label,'edge-label',{'text-anchor':'middle'});
+      const dot=svgEl('circle',{cx:route.start.x,cy:route.start.y,r:5,class:'packet-dot','filter':'url(#packetShadow)'});
+      packetLayer.appendChild(dot);packetDots.push({dot,route,index});
+    });
+    currentNodes.forEach(node=>{
+      const group=svgEl('g',{class:'arch-node node-'+node.kind,'data-node':node.id});
+      group.appendChild(svgEl('rect',{x:node.x,y:node.y,width:node.w,height:node.h,rx:5,class:'node-shell'}));
+      group.appendChild(svgEl('rect',{x:node.x+12,y:node.y+13,width:28,height:25,rx:3,class:'node-icon-bg'}));
+      const icon=node.kind==='gpu'?'GPU':node.kind==='storage'?'PFS':node.kind==='network'?'NIC':'API';
+      addText(group,node.x+26,node.y+29,icon,'node-icon',{'text-anchor':'middle'});
+      addText(group,node.x+node.w/2,node.y+61,node.title,'node-title',{'text-anchor':'middle'});
+      const subtitle=node.sub.length>29?node.sub.slice(0,28)+'…':node.sub;
+      addText(group,node.x+node.w/2,node.y+82,subtitle,'node-subtitle',{'text-anchor':'middle'});
+      if(node.kind==='gpu'){
+        for(let i=0;i<3;i++)group.appendChild(svgEl('rect',{x:node.x+node.w/2-26+i*19,y:node.y+node.h-26,width:12,height:8,rx:1,class:'gpu-memory-block'}));
+      }else if(node.kind==='storage'){
+        for(let i=0;i<3;i++)group.appendChild(svgEl('rect',{x:node.x+node.w/2-31,y:node.y+node.h-30+i*7,width:62,height:4,rx:1,class:'storage-block'}));
+      }else group.appendChild(svgEl('path',{d:`M ${node.x+node.w/2-21} ${node.y+node.h-20} h42`,class:'node-baseline'}));
+      scene.appendChild(group);
+    });
+    focusNode=data.steps[currentStep].focus;highlightDiagramNode();
+  }
+  function highlightDiagramNode(){
+    if(!scene)return;
+    scene.querySelectorAll('.arch-node').forEach(n=>n.classList.toggle('node-focus',n.dataset.node===focusNode));
+    svgPaths.forEach(({path,edge})=>path.classList.toggle('path-focus',edge.from===focusNode||edge.to===focusNode));
+  }
+  function updateStepUI(){
+    const data=workflowData[currentFlow],step=data.steps[currentStep];
+    document.getElementById('flow-label').textContent=data.label;
+    document.getElementById('flow-title').textContent=data.title;
+    document.getElementById('flow-summary').textContent=data.summary;
+    stagebar.replaceChildren(...data.stages.map((s,i)=>{
+      const el=document.createElement('span');el.textContent=String(i+1).padStart(2,'0')+' · '+s;
+      if(i===currentStep)el.classList.add('stage-active');return el;
+    }));
+    document.getElementById('step-count').textContent='STEP '+String(currentStep+1).padStart(2,'0')+' / 04';
+    document.getElementById('step-progress-bar').style.width=((currentStep+1)/4*100)+'%';
+    document.getElementById('step-icon').textContent=String(currentStep+1).padStart(2,'0');
+    document.getElementById('step-heading').textContent=step.heading;
+    document.getElementById('step-description').textContent=step.description;
+    document.getElementById('step-note').textContent=step.note;
+    focusNode=step.focus;highlightDiagramNode();
+  }
+  function stopAnimation(){
+    running=false;if(animationFrame)cancelAnimationFrame(animationFrame);
+    animationFrame=0;lastTime=0;if(playButton)playButton.textContent='▶ Play flow';
+  }
+  function animate(timestamp){
+    if(!running)return;
+    if(!lastTime)lastTime=timestamp;
+    const delta=timestamp-lastTime;lastTime=timestamp;
+    progress+=delta*0.00022*speed;
+    const edgeCount=workflowData[currentFlow].edges.length,completed=Math.floor(progress),t=progress-completed;
+    packetDots.forEach(({dot,route,index})=>{
+      const localT=index===completed?t:(index<completed?1:0);
+      const pos=routePoint(route,Math.max(0,Math.min(1,localT)));
+      dot.setAttribute('cx',pos.x);dot.setAttribute('cy',pos.y);
+      dot.setAttribute('opacity',index===completed?1:(index<completed?.18:.05));
+    });
+    if(progress>=edgeCount){progress=0;currentStep=(currentStep+1)%4;updateStepUI();}
+    animationFrame=requestAnimationFrame(animate);
+  }
+  function setFlow(key){
+    if(!workflowData[key])return;
+    stopAnimation();currentFlow=key;currentStep=0;progress=0;
+    flowTabs.forEach(tab=>{const active=tab.dataset.flow===key;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));});
+    focusNode=workflowData[key].steps[0].focus;renderScene();updateStepUI();
+  }
+  flowTabs.forEach(tab=>tab.addEventListener('click',()=>setFlow(tab.dataset.flow)));
+  if(playButton)playButton.addEventListener('click',()=>{
+    if(running){stopAnimation();return;}
+    running=true;lastTime=0;playButton.textContent='Ⅱ Pause flow';animationFrame=requestAnimationFrame(animate);
+  });
+  if(stepButton)stepButton.addEventListener('click',()=>{
+    stopAnimation();currentStep=(currentStep+1)%4;progress=0;updateStepUI();
+    packetDots.forEach(({dot,route},i)=>{
+      const p=routePoint(route,i===currentStep?1:0);
+      dot.setAttribute('cx',p.x);dot.setAttribute('cy',p.y);dot.setAttribute('opacity',i===currentStep?1:.15);
+    });
+  });
+  if(resetButton)resetButton.addEventListener('click',()=>setFlow(currentFlow));
+  if(speedSlider)speedSlider.addEventListener('input',()=>{
+    speed=Number(speedSlider.value)/3;
+    document.getElementById('speed-value').textContent=speed.toFixed(1).replace(/\.0$/,'')+'×';
+  });
+
+  const explodedLayers={
+    gpu:{title:'GPU accelerators',text:'Validate GPU health, memory pressure, clocks, thermals, PCIe/NVLink topology and workload placement before assuming storage is the bottleneck.',checks:['nvidia-smi','GPU topology','ECC / Xid events']},
+    pcie:{title:'PCIe / NVLink fabric',text:'The path between GPUs, host CPUs and NICs depends on system design. GPU peer access and NIC affinity can influence collective and I/O performance.',checks:['nvidia-smi topo -m','PCIe link state','NUMA locality']},
+    host:{title:'CPU / host memory',text:'Host memory and CPU cores can remain on the critical path for orchestration, data preparation, interrupts, buffering and CPU-staged I/O.',checks:['numactl','CPU utilization','Memory bandwidth']},
+    nic:{title:'NIC / DPU / HCA',text:'The network adapter and its driver/firmware determine practical transport features. Validate fabric protocol, routing, congestion and peer topology.',checks:['Link counters','RDMA health','NIC ↔ GPU affinity']},
+    software:{title:'OS / drivers / runtime',text:'Application libraries, kernel modules, GPU driver, network stack, filesystem client and configuration need to be mutually compatible and observable.',checks:['Driver matrix','Kernel logs','Runtime diagnostics']}
+  };
+  const explodedButtons=[...document.querySelectorAll('.exploded-layer')];
+  function setExploded(key){
+    const item=explodedLayers[key];if(!item)return;
+    explodedButtons.forEach(b=>{const active=b.dataset.layer===key;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+    const root=document.getElementById('layer-detail');root.replaceChildren();
+    const title=document.createElement('strong');title.textContent=item.title;root.appendChild(title);
+    const p=document.createElement('p');p.textContent=item.text;root.appendChild(p);
+    const checks=document.createElement('div');checks.className='layer-checks';
+    item.checks.forEach(c=>{const s=document.createElement('span');s.textContent=c;checks.appendChild(s);});
+    root.appendChild(checks);
+  }
+  explodedButtons.forEach(btn=>btn.addEventListener('click',()=>setExploded(btn.dataset.layer)));
+
+  const gdsModeButtons=[...document.querySelectorAll('.gds-mode')];
+  const gdsExplanations={
+    gds:'Illustrative GDS path: software and compatible hardware coordinate data movement to/from GPU memory without a required CPU bounce-buffer copy on the supported path.',
+    staged:'Illustrative CPU-staged path: data commonly passes through host memory before being copied to/from GPU memory. Exact behavior depends on application APIs and storage stack.'
+  };
+  gdsModeButtons.forEach(btn=>btn.addEventListener('click',()=>{
+    gdsModeButtons.forEach(b=>b.classList.toggle('active',b===btn));
+    document.getElementById('gds-mode-explainer').textContent=gdsExplanations[btn.dataset.gds];
+    document.querySelector('.gds-path').dataset.mode=btn.dataset.gds;
+  }));
+  const densitySelect=document.getElementById('density-select');
+  if(densitySelect)densitySelect.addEventListener('change',()=>{
+    document.body.classList.toggle('density-large',densitySelect.value==='large');
+    document.body.classList.toggle('density-compact',densitySelect.value==='compact');
+  });
+  setFlow('gpu');setExploded('gpu');
+
 })();
