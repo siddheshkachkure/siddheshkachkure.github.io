@@ -25,7 +25,7 @@ GitHub Pages can serve the site directly from the repository root on the configu
 
 
 ## Interactive architecture lab (added in the follow-up PR)
-The portfolio now includes a browser-based learning/illustration lab for:
+The portfolio includes a browser-based learning/illustration lab for:
 - GPU-to-GPU collective traffic (framework/NCCL/ranks and high-speed network).
 - GPU-to-storage data access and checkpoint paths.
 - An illustrative GPUDirect Storage (GDS) versus CPU-staged path comparison.
