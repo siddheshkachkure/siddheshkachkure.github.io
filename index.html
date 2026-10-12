@@ -142,7 +142,103 @@
       </div>
     </section>
 
-    <section class="contact-section" id="contact">
+
+    <section class="deepdive-section" id="architecture">
+      <div class="section-shell">
+        <div class="section-kicker"><span>08 / ARCHITECTURE LAB</span><span>INTERACTIVE SYSTEM VIEW</span></div>
+        <div class="deepdive-heading">
+          <div><div class="eyebrow"><span class="live-dot"></span> ENGINEERING DEEP DIVE</div><h2>Trace the path.<br><span class="gradient-text">Understand the system.</span></h2></div>
+          <p>A browser-friendly walkthrough of common AI/HPC data paths—from GPU collectives across nodes to data movement between GPU memory and a parallel storage system.</p>
+        </div>
+        <div class="lab-controls">
+          <div class="lab-tabs" role="tablist" aria-label="Architecture workflows">
+            <button class="lab-tab active" role="tab" aria-selected="true" data-flow="gpu">GPU ↔ GPU</button>
+            <button class="lab-tab" role="tab" aria-selected="false" data-flow="storage">GPU ↔ Storage</button>
+            <button class="lab-tab" role="tab" aria-selected="false" data-flow="gds">GPUDirect Storage</button>
+          </div>
+          <div class="readability-control"><label for="density-select">Reading density</label><select id="density-select"><option value="comfortable">Comfortable</option><option value="compact">Compact</option><option value="large">Large text</option></select></div>
+        </div>
+        <div class="workflow-card">
+          <div class="workflow-top"><div><span class="workflow-label" id="flow-label">WORKFLOW / COLLECTIVE COMMUNICATION</span><h3 id="flow-title">GPU-to-GPU traffic across a high-speed fabric</h3></div><span class="sim-indicator"><i></i> INTERACTIVE MODEL</span></div>
+          <p id="flow-summary" class="workflow-summary">A simplified distributed training path: ranks exchange tensor data through NCCL, which selects transports and algorithms according to the environment, topology and configuration.</p>
+          <div class="flow-stagebar" id="flow-stagebar"><span class="stage-active">01 · Rank / GPU</span><span>02 · Collective</span><span>03 · Network</span><span>04 · Peer GPU</span></div>
+          <div class="flow-canvas" id="flow-canvas">
+            <svg class="flow-svg" viewBox="0 0 1000 430" role="img" aria-labelledby="flow-svg-title flow-svg-desc">
+              <title id="flow-svg-title">Interactive GPU and storage architecture diagram</title>
+              <desc id="flow-svg-desc">A schematic diagram showing GPU compute nodes connected over a network to a parallel storage system.</desc>
+              <defs>
+                <linearGradient id="packetGlow" x1="0" x2="1"><stop offset="0%" stop-color="#70a7ff"/><stop offset="100%" stop-color="#64e3d4"/></linearGradient>
+                <pattern id="labGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#8aa4bb" stroke-opacity=".09" stroke-width="1"/></pattern>
+                <filter id="packetShadow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <rect width="1000" height="430" fill="url(#labGrid)"/>
+              <g id="architecture-scene"></g>
+              <g id="packet-layer"></g>
+            </svg>
+            <div class="diagram-caption"><span><i class="legend-dot legend-data"></i> Data movement</span><span><i class="legend-dot legend-control"></i> Control / metadata path</span><span class="caption-note">Schematic — not to physical scale</span></div>
+          </div>
+          <div class="sim-controls">
+            <div class="sim-buttons"><button class="sim-btn primary" id="play-flow">▶ Play flow</button><button class="sim-btn" id="step-flow">Step →</button><button class="sim-btn" id="reset-flow">↺ Reset</button></div>
+            <div class="speed-control"><label for="speed-range">Packet speed</label><input type="range" min="1" max="5" value="3" id="speed-range"><span id="speed-value">1×</span></div>
+          </div>
+          <div class="workflow-detail">
+            <div class="step-progress"><span id="step-count">STEP 01 / 04</span><div><i id="step-progress-bar"></i></div></div>
+            <div class="step-copy"><span class="step-icon" id="step-icon">01</span><div><h4 id="step-heading">GPU rank creates work</h4><p id="step-description">The application launches GPU work and reaches a communication point, such as an all-reduce. The rank's placement and GPU/NIC topology influence the best path.</p></div></div>
+            <div class="step-note"><strong>ENGINEERING CHECK</strong><span id="step-note">Confirm rank placement, GPU health, topology awareness and the expected collective size.</span></div>
+          </div>
+        </div>
+        <div class="architecture-grid">
+          <article class="architecture-note"><span class="note-index">A / EXPLODED VIEW</span><h3>GPU server: the layers beneath the workload</h3><p>Explore the logical hardware/software stack by selecting a layer. Physical details vary by server model, platform generation and OEM configuration.</p>
+            <div class="exploded-view" id="exploded-view">
+              <button class="exploded-layer active" data-layer="gpu"><span class="layer-number">01</span><span class="layer-icon">▦</span><span><b>GPU accelerators</b><small>HBM · kernels · copy engines</small></span><span class="layer-open">＋</span></button>
+              <button class="exploded-layer" data-layer="pcie"><span class="layer-number">02</span><span class="layer-icon">⌁</span><span><b>PCIe / NVLink fabric</b><small>Host links · peer paths · topology</small></span><span class="layer-open">＋</span></button>
+              <button class="exploded-layer" data-layer="host"><span class="layer-number">03</span><span class="layer-icon">▤</span><span><b>CPU / host memory</b><small>NUMA · pinned buffers · drivers</small></span><span class="layer-open">＋</span></button>
+              <button class="exploded-layer" data-layer="nic"><span class="layer-number">04</span><span class="layer-icon">⇄</span><span><b>NIC / DPU / HCA</b><small>RDMA · Ethernet / InfiniBand</small></span><span class="layer-open">＋</span></button>
+              <button class="exploded-layer" data-layer="software"><span class="layer-number">05</span><span class="layer-icon">⌘</span><span><b>OS / drivers / runtime</b><small>CUDA · NCCL · OFED / DOCA as applicable</small></span><span class="layer-open">＋</span></button>
+            </div>
+            <div class="layer-detail" id="layer-detail"><strong>GPU accelerators</strong><p>Validate GPU health, memory pressure, clocks, thermals, PCIe/NVLink topology, and workload placement before assuming storage is the bottleneck.</p><div class="layer-checks"><span>nvidia-smi</span><span>GPU topology</span><span>ECC / Xid events</span></div></div>
+          </article>
+          <article class="architecture-note"><span class="note-index">B / DATA LAYER</span><h3>Parallel storage: from client to media</h3><p>A logical view of how a file or object request can travel through client software and storage services.</p>
+            <div class="storage-exploded">
+              <div class="storage-exploded-item"><span class="storage-layer-icon">APP</span><div><b>Workload / framework</b><small>Training data loader · checkpoint writer</small></div></div><div class="storage-connector">↓ <span>file API / object API</span></div>
+              <div class="storage-exploded-item"><span class="storage-layer-icon">CLI</span><div><b>Client / mount / SDK</b><small>File-system client or S3 client</small></div></div><div class="storage-connector">↓ <span>request routing + data transport</span></div>
+              <div class="storage-exploded-item"><span class="storage-layer-icon">NET</span><div><b>Network fabric</b><small>TCP or supported RDMA path, depending on stack</small></div></div><div class="storage-connector">↓ <span>cluster-specific protocol</span></div>
+              <div class="storage-exploded-item"><span class="storage-layer-icon">PFS</span><div><b>Storage services</b><small>Metadata + data services / object services</small></div></div><div class="storage-connector">↓ <span>backend I/O</span></div>
+              <div class="storage-exploded-item media-layer"><span class="storage-layer-icon">NV</span><div><b>Persistent media</b><small>NVMe / SSD / HDD according to platform</small></div></div>
+            </div>
+          </article>
+        </div>
+        <div class="gds-section">
+          <div class="gds-intro"><span class="note-index">C / GPU-DIRECT STORAGE</span><h3>Move data with fewer avoidable copies.</h3><p>GPUDirect Storage (GDS) enables a supported storage stack to move data between storage and GPU memory while bypassing CPU bounce buffers in supported paths. Actual behavior depends on GPU, driver, filesystem/storage client, transport, topology and configuration.</p><div class="gds-disclaimer">Important: “GPU Direct” is not one universal switch. The eligible path, compatibility matrix and actual data movement must be validated for the target platform.</div></div>
+          <div class="gds-path">
+            <div class="gds-endpoint"><span>01</span><b>Storage target</b><small>File / block / supported backend</small></div>
+            <div class="gds-flowline"><span class="flowline-label">DATA</span><i></i><i></i><i></i></div>
+            <div class="gds-endpoint gds-highlight"><span>02</span><b>Supported GDS path</b><small>cuFile + compatible stack</small></div>
+            <div class="gds-flowline"><span class="flowline-label">DMA / TRANSFER</span><i></i><i></i><i></i></div>
+            <div class="gds-endpoint"><span>03</span><b>GPU memory</b><small>Application buffer / HBM</small></div>
+            <div class="gds-path-toggle"><button class="gds-mode active" data-gds="gds">Supported GDS path</button><button class="gds-mode" data-gds="staged">CPU-staged path</button></div>
+            <p class="gds-mode-explainer" id="gds-mode-explainer">Illustrative GDS path: software and compatible hardware coordinate data movement to/from GPU memory without a required CPU bounce-buffer copy on the supported path.</p>
+          </div>
+        </div>
+        <div class="workflow-footnote"><strong>Scope note:</strong> These visuals explain common concepts and logical paths for education and architecture conversations. They are not packet captures, measured benchmark results, vendor certification statements, or a guarantee that a particular deployment uses this precise path.</div>
+      </div>
+    </section>
+
+    <section class="resume-section" id="experience">
+      <div class="section-shell">
+        <div class="section-kicker"><span>09 / EXPERIENCE & CREDENTIALS</span><span>PROFILE AT A GLANCE</span></div>
+        <div class="resume-heading"><h2>Operational depth.<br><span class="muted-heading">Architecture perspective.</span></h2><p>Selected experience and qualifications from my engineering profile.</p></div>
+        <div class="experience-timeline">
+          <article><span class="experience-date">JUL 2025 — PRESENT</span><div><h3>Deputy Manager · Service Delivery & Operations</h3><p class="experience-org">Yotta Data Services · SHAKTI CLOUD</p><p>AI/HPC compute and storage delivery, multi-vendor deployment coordination, capacity planning, observability, customer escalation, lifecycle operations and severity incident response across heterogeneous storage platforms.</p><div class="tag-row"><span>GPU infrastructure</span><span>70 PB+ estate*</span><span>Multi-vendor</span></div></div></article>
+          <article><span class="experience-date">JUL 2024 — JUL 2025</span><div><h3>HPC Administrator</h3><p class="experience-org">TIS Labs · Supporting Yotta</p><p>H100/L40s GPU infrastructure, NVIDIA Base Command Manager, Slurm, WekaFS, high-speed networks and monitoring for model training, inference and data-intensive workloads.</p><div class="tag-row"><span>Slurm</span><span>WEKA</span><span>GPU cluster ops</span></div></div></article>
+          <article><span class="experience-date">NOV 2023 — JUL 2024</span><div><h3>Storage Administrator</h3><p class="experience-org">Softenger · Enterprise storage operations</p><p>Enterprise storage provisioning, performance troubleshooting, SAN zoning, RAID, tiering, backup/recovery and infrastructure reporting.</p><div class="tag-row"><span>SAN</span><span>Capacity management</span><span>Data protection</span></div></div></article>
+          <article><span class="experience-date">JUL 2021 — OCT 2023</span><div><h3>Associate · Service Delivery HPC</h3><p class="experience-org">Dreamcare Developers</p><p>HPC deployments, Slurm/PBS scheduling, resource allocation, configuration validation, customer handover and security-assessment coordination.</p><div class="tag-row"><span>HPC deployment</span><span>Slurm / PBS</span><span>Service delivery</span></div></div></article>
+        </div>
+        <div class="credential-wrap"><div><span class="note-index">SELECTED CREDENTIALS</span><h3>Continuous learning.</h3><p>Certifications and training listed in my current résumé.</p></div><div class="credential-list"><span>WEKA · WEKA Xpert Certified</span><span>WEKA · WEKA Explorer Certified</span><span>NVIDIA · Base Command Manager Administration</span><span>Confluent · Data Streaming Engineer</span><span>Microsoft · Azure Network Engineer Associate</span><span>Microsoft · Azure Administrator Associate</span><span>IBM · Spectrum Storage for AI & Big Data Fundamentals</span><span>HPE · Cloud Computing Foundation</span></div></div>
+        <p class="resume-note">*Storage estate size is stated as presented in the résumé and represents the scale of the environment supported, not a claim of individually owned capacity. Certifications and validity periods should be verified before external use.</p>
+      </div>
+    </section>
+\n    <section class="contact-section" id="contact">
       <div class="contact-grid-lines"></div>
       <div class="section-shell contact-content"><div class="section-kicker"><span>07 / CONNECT</span><span>OPEN TO TECHNICAL CONVERSATIONS</span></div><div class="contact-main"><div><div class="eyebrow"><span class="live-dot"></span> LET'S BUILD SOMETHING RELIABLE</div><h2>Have a complex<br>infrastructure problem?<br><span class="gradient-text">Let's talk.</span></h2><p>AI infrastructure, HPC storage, performance engineering, architecture discussions, or customer-focused operations—I’m always happy to connect with people building at scale.</p><div class="hero-actions"><a class="button button-primary" href="https://www.linkedin.com/in/siddhesh-kachkure-947328171/" target="_blank" rel="noreferrer">Connect on LinkedIn <span>↗</span></a><a class="button button-ghost" href="https://github.com/siddheshkachkure" target="_blank" rel="noreferrer">Explore GitHub <span>↗</span></a></div></div><div class="contact-aside"><div class="contact-aside-top"><span>PROFILE / SK</span><span class="contact-stamp">HPC × AI</span></div><div class="contact-aside-mark">SK<span>.</span></div><strong>Siddhesh Kachkure</strong><p>HPC Storage & Compute Infrastructure Engineer</p><div class="contact-divider"></div><div class="contact-link"><span>LINKEDIN</span><a href="https://www.linkedin.com/in/siddhesh-kachkure-947328171/" target="_blank" rel="noreferrer">Professional profile ↗</a></div><div class="contact-link"><span>GITHUB</span><a href="https://github.com/siddheshkachkure" target="_blank" rel="noreferrer">Code & projects ↗</a></div></div></div></div>
     </section>
