@@ -22,3 +22,16 @@ Open `index.html` in a browser, or run any static HTTP server from this director
 
 ## Deploy
 GitHub Pages can serve the site directly from the repository root on the configured publishing branch.
+
+
+## Interactive architecture lab (added in the follow-up PR)
+The portfolio now includes a browser-based learning/illustration lab for:
+- GPU-to-GPU collective traffic (framework/NCCL/ranks and high-speed network).
+- GPU-to-storage data access and checkpoint paths.
+- An illustrative GPUDirect Storage (GDS) versus CPU-staged path comparison.
+- Clickable exploded server layer view (GPU, PCIe/NVLink, host memory, NIC/HCA and software).
+- Clickable storage data-path stack, workflow step explanations, packet-flow animation, play/pause, single-step, reset and speed control.
+- Comfortable / compact / large reading-density modes.
+- Experience and selected credentials based on the supplied résumé.
+
+Diagrams are schematic explanatory models. They do not represent a packet capture, a specific customer topology, vendor certification or guaranteed direct path. GDS eligibility and data movement must be confirmed against the actual GPU, driver, storage client/filesystem, transport, topology and diagnostics. Review certification expiry/validity and public wording before sharing broadly.
