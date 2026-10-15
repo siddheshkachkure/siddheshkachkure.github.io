@@ -94,6 +94,6 @@ if(dc){
  const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(reduceMotion){packetGroup.setAttribute('display','none')}
  function animate(now){if(reduceMotion)return;if(!paused&&activePath){const elapsed=(now-started)/1000,circles=[...packetGroup.children];try{const len=activePath.getTotalLength();circles.forEach((c,i)=>{const t=((elapsed*.105+i/circles.length)%1),p=activePath.getPointAtLength(t*len);c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('opacity',.55+.45*Math.sin(t*Math.PI))})}catch(e){}}requestAnimationFrame(animate)}
- drawTrace();select('spine',map.querySelector('[data-dc-node="spine"]'));if(!reduceMotion)requestAnimationFrame(animate);
+ drawTrace();select(paths[mode.value].key,map.querySelector('[data-dc-node="'+paths[mode.value].key+'"]'));if(!reduceMotion)requestAnimationFrame(animate);
 }
 })();
