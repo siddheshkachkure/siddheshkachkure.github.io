@@ -35,12 +35,18 @@ if(dc){
  control:['JOB CONTROL PATH','User → login/bastion → Slurm submission/controller → scheduler allocation → node launch/runtime. This is a control path, separate from high-volume GPU collective and storage payload paths.']
  };
  const paths={
- training:{d:'M120 792H300H520H715V832H715V888H640V424H640V485H640',cls:'route-storage',key:'parallel',stage:3},
- collective:{d:'M640 610V445H640V424H640V352H640V424H640V485H640V610',cls:'route-compute',key:'spine',stage:2},
- checkpoint:{d:'M640 888V832H715V792H520H300H220',cls:'route-storage',key:'parallel',stage:3},
- object:{d:'M640 80H720H760V150H1105V752',cls:'route-object',key:'s3',stage:3},
- control:{d:'M1022 112V150H155V178H155V256H640V485',cls:'route-control',key:'scheduler',stage:1},
- oob:{d:'M735 256V270H1200V970H640V958',cls:'route-control',key:'oob',stage:1}
+ // Storage read: filesystem targets → storage spine/leaf → client-side storage NIC → GPU server.
+ training:{d:'M715 792H385H120V700H738V570',cls:'route-storage',key:'parallel',stage:3},
+ // Collective traffic remains on the compute fabric between two GPU servers.
+ collective:{d:'M738 570V497H688V424H988V451H1043V522',cls:'route-compute',key:'spine',stage:2},
+ // Checkpoint write follows the reverse client-to-filesystem path.
+ checkpoint:{d:'M738 570V700H120V792H385H715',cls:'route-storage',key:'parallel',stage:3},
+ // HTTPS/S3 request path through the edge security boundary and service network.
+ object:{d:'M85 80H265H455H645H835V150H1105V752',cls:'route-object',key:'s3',stage:0},
+ // User submission to Slurm, then logical job-launch/control reachability to a compute node.
+ control:{d:'M1022 80V150H155V178H290V270H1260V510H738V522',cls:'route-control',key:'scheduler',stage:1},
+ // Isolated OOB path is routed around the diagram edge to the server management boundary.
+ oob:{d:'M735 256V270H1260V970H640V958',cls:'route-control',key:'oob',stage:1}
  };
  // Build eight logical rail groups and two visual planes; exact physical switch counts intentionally omitted.
  const railXs=[88,238,388,538,688,838,988,1138];
@@ -85,7 +91,9 @@ if(dc){
  mode.addEventListener('change',()=>{started=performance.now();drawTrace();const key=paths[mode.value].key;select(key,map.querySelector('[data-dc-node="'+key+'"]'))});
  play.addEventListener('click',()=>{paused=!paused;play.textContent=paused?'▶ Resume animation':'Ⅱ Pause animation';play.classList.toggle('active',!paused);play.setAttribute('aria-pressed',String(!paused));if(activePath)activePath.style.animationPlayState=paused?'paused':'running'});
  $('#dc-replay').addEventListener('click',()=>{started=performance.now();paused=false;play.textContent='Ⅱ Pause animation';play.classList.add('active');play.setAttribute('aria-pressed','true');if(activePath)activePath.style.animationPlayState='running';drawTrace()});
- function animate(now){if(!paused&&activePath){const elapsed=(now-started)/1000,circles=[...packetGroup.children];try{const len=activePath.getTotalLength();circles.forEach((c,i)=>{const t=((elapsed*.105+i/circles.length)%1),p=activePath.getPointAtLength(t*len);c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('opacity',.55+.45*Math.sin(t*Math.PI))})}catch(e){}}requestAnimationFrame(animate)}
- drawTrace();select('spine',map.querySelector('[data-dc-node="spine"]'));requestAnimationFrame(animate);
+ const reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(reduceMotion){packetGroup.setAttribute('display','none')}
+ function animate(now){if(reduceMotion)return;if(!paused&&activePath){const elapsed=(now-started)/1000,circles=[...packetGroup.children];try{const len=activePath.getTotalLength();circles.forEach((c,i)=>{const t=((elapsed*.105+i/circles.length)%1),p=activePath.getPointAtLength(t*len);c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('opacity',.55+.45*Math.sin(t*Math.PI))})}catch(e){}}requestAnimationFrame(animate)}
+ drawTrace();select('spine',map.querySelector('[data-dc-node="spine"]'));if(!reduceMotion)requestAnimationFrame(animate);
 }
 })();
