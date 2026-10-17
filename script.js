@@ -60,7 +60,7 @@ if(dc){
   const x=railXs[i],g=svg('g',{class:'dc-rail-leaf','data-dc-node':'leaf',tabindex:'0',role:'button','aria-label':'Compute rail '+i});
   g.appendChild(svg('rect',{x:x-53,y:432,width:106,height:38,rx:4}));
   g.appendChild(svg('text',{x,y:447,'text-anchor':'middle'},'RAIL '+i));
-  g.appendChild(svg('text',{x,y:461,'text-anchor':'middle'},'LEAF / PLANE A+B'));
+  g.appendChild(svg('text',{x,y:461,'text-anchor':'middle'},'TAN LEAF · PLANES A/B'));
   leafGroup.appendChild(g);
   linkGroup.appendChild(svg('path',{d:`M${x} 424V432 M${x} 470V522`,class:'dc-rail-link'}));
   linkGroup.appendChild(svg('path',{d:`M${x+3} 424V432 M${x+3} 470V522`,class:'dc-rail-link plane-b'}));
