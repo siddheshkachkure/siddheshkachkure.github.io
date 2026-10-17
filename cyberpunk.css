@@ -273,3 +273,6 @@ footer{background:#050509;border-top:1px solid var(--line);color:#77879a;font:8p
  body::after{display:none}.hero h1 .cyber-glitch,.hero h1 .cyber-glitch::before,.hero h1 .cyber-glitch::after{animation:none!important}
  .dc-flow-line{animation:none!important;stroke-dasharray:none!important}.packets,.gds-wire i{animation:none!important;opacity:.25!important}
 }
+
+/* Minimum comfortable touch targets for interactive controls. */
+button{cursor:pointer} .dc-btn,.dc-controls select,.layer,.gds-mode,.skill-tab,.lab-tab,.controls button{min-height:44px}
