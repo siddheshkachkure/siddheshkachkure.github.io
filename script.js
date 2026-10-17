@@ -103,5 +103,6 @@ if(dc){
  if(dcObserver)dcObserver.observe(dc);else dcVisible=true;
  if(motionPreference&&motionPreference.addEventListener)motionPreference.addEventListener('change',e=>{reduceMotion=e.matches;packetGroup.setAttribute('display',reduceMotion?'none':'');scheduleTrace()});
  drawTrace();select(paths[mode.value].key,map.querySelector('[data-dc-node="'+paths[mode.value].key+'"]'));scheduleTrace();
+  const staticFallback=$('#dc-static-fallback');if(staticFallback)staticFallback.remove();
 }
 })();
