@@ -328,3 +328,48 @@ button{cursor:pointer} .dc-btn,.dc-controls select,.layer,.gds-mode,.skill-tab,.
 .architecture-diagram .arch-storage-link{fill:none;stroke:#00ff88;stroke-width:1.5;stroke-dasharray:6 4}
 .architecture-note{margin:14px 0 0;color:#9ca3af;font-size:12px;line-height:1.7}
 @media(max-width:640px){.architecture-card{padding:10px}.architecture-meta{font-size:9px}.architecture-diagram .arch-kicker{font-size:12px}.architecture-diagram .arch-label{font-size:11px}.architecture-diagram .arch-small{font-size:12px}}
+
+/* Animated AI data-centre connectivity map */
+.architecture-section .section-head{margin-bottom:24px}
+.architecture-card{border:1px solid #2a2a3a;background:#101018;padding:clamp(12px,2.5vw,24px);border-radius:8px}
+.architecture-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#7e8a9a;font:10px/1.5 "JetBrains Mono","Fira Code",monospace;letter-spacing:.12em;margin-bottom:14px}
+.architecture-legend,.architecture-flow-caption{display:flex;gap:12px 20px;flex-wrap:wrap;color:#a9b5c2;font:10px/1.7 "JetBrains Mono","Fira Code",monospace;margin:10px 0 16px}
+.architecture-legend span,.architecture-flow-caption span{display:inline-flex;align-items:center;gap:7px}
+.architecture-legend i,.flow-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+.key-control,.control-dot{background:#ff00ff}.key-compute,.compute-dot{background:#00d4ff}.key-storage,.storage-dot{background:#00ff88}.key-oob{background:#ff6688}
+.architecture-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #2a2a3a;border-radius:6px;background:#0a0a0f}
+.architecture-scroll:focus-visible{outline:2px solid #00d4ff;outline-offset:3px}
+.architecture-diagram{display:block;width:100%;height:auto;background:#0a0a0f}
+.animated-architecture{min-width:850px}
+.architecture-diagram text{font-family:"JetBrains Mono","Fira Code",Consolas,monospace;fill:#e0e0e0}
+.architecture-diagram .arch-kicker{font-size:11px;letter-spacing:.07em;fill:#00d4ff}
+.architecture-diagram .arch-label{font-size:10px;fill:#d7dce3}
+.architecture-diagram .arch-small{font-size:9px;fill:#9ca3af}
+.architecture-diagram .arch-box rect{fill:#12121a;stroke:#00d4ff;stroke-width:1.2}
+.architecture-diagram .arch-control rect{stroke:#ff00ff}.architecture-diagram .arch-control .arch-kicker{fill:#ff00ff}
+.architecture-diagram .arch-oob rect,.architecture-diagram .arch-oob-node rect{fill:#21131b;stroke:#ff6688;stroke-width:1.2;stroke-dasharray:5 4}
+.architecture-diagram .arch-oob .arch-kicker,.architecture-diagram .arch-oob-node .arch-kicker{fill:#ff6688}
+.architecture-diagram .arch-switch rect{fill:#101c28;stroke:#00d4ff;stroke-width:1.2}
+.architecture-diagram .arch-switch.spine rect{fill:#10212b;stroke:#00d4ff}
+.architecture-diagram .arch-switch.leaf rect{fill:#111c27;stroke:#438a9e}
+.architecture-diagram .arch-node rect{fill:#12121a;stroke:#7b8794;stroke-width:1}
+.architecture-diagram .arch-node .arch-kicker{fill:#00ff88}
+.architecture-diagram .arch-storage rect{fill:#10251e;stroke:#00ff88;stroke-width:1.4}
+.architecture-diagram .arch-storage .arch-kicker{fill:#00ff88}
+.architecture-diagram .arch-link{fill:none;stroke:#00d4ff;stroke-width:1.4;opacity:.72}
+.architecture-diagram .compute-link{stroke:#00d4ff}
+.architecture-diagram .arch-control-link{fill:none;stroke:#ff00ff;stroke-width:1.3;stroke-dasharray:5 5;animation:arch-dash 1.6s linear infinite}
+.architecture-diagram .arch-oob-link{fill:none;stroke:#ff6688;stroke-width:1.3;stroke-dasharray:4 5;opacity:.85}
+.architecture-diagram .arch-storage-link{fill:none;stroke:#00ff88;stroke-width:1.6;stroke-dasharray:7 5;animation:arch-dash 1.3s linear infinite}
+.architecture-diagram .arch-compute-route{fill:none;stroke:#00d4ff;stroke-width:2.3;stroke-dasharray:8 8;opacity:.9;animation:arch-dash 1s linear infinite}
+.architecture-diagram .arch-packet{stroke:#07100d;stroke-width:1;filter:drop-shadow(0 0 5px currentColor)}
+.architecture-diagram .control-packet{fill:#ffb5ff;color:#ff00ff}
+.architecture-diagram .compute-packet{fill:#c5f7ff;color:#00d4ff}
+.architecture-diagram .storage-packet{fill:#d2ffe2;color:#00ff88}
+.architecture-diagram .oob-packet{fill:#ffd5df;color:#ff6688}
+.architecture-flow-caption{margin:15px 0 4px}
+.architecture-flow-caption b{color:#e6f1ef}
+.architecture-note{margin:14px 0 0;color:#9ca3af;font-size:11px;line-height:1.75}
+@keyframes arch-dash{to{stroke-dashoffset:-32}}
+@media(max-width:640px){.architecture-card{padding:10px}.architecture-meta,.architecture-legend,.architecture-flow-caption{font-size:9px}.architecture-diagram .arch-kicker{font-size:12px}.architecture-diagram .arch-label{font-size:11px}.architecture-diagram .arch-small{font-size:10px}.animated-architecture{min-width:850px}}
+@media(prefers-reduced-motion:reduce){.architecture-diagram animate,.architecture-diagram animateMotion{display:none}.architecture-diagram .arch-control-link,.architecture-diagram .arch-storage-link,.architecture-diagram .arch-compute-route{animation:none;stroke-dasharray:none}.architecture-diagram .arch-packet{display:none}}
