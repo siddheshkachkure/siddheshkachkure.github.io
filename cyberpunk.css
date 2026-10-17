@@ -276,3 +276,29 @@ footer{background:#050509;border-top:1px solid var(--line);color:#77879a;font:8p
 
 /* Minimum comfortable touch targets for interactive controls. */
 button{cursor:pointer} .dc-btn,.dc-controls select,.layer,.gds-mode,.skill-tab,.lab-tab,.controls button{min-height:44px}
+
+/* Part 03 workflow lab: rail-first, end-to-end trace clarity */
+#workflows .dc-top h3{letter-spacing:-.035em}
+#workflows .dc-controls{position:relative;gap:9px}
+#workflows .dc-controls select{min-width:min(100%,330px);max-width:100%;min-height:42px;border-color:#00d4ff;color:#e0e0e0;background:#101c28}
+#workflows .dc-btn{min-height:42px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+#workflows .dc-btn:hover{border-color:#00ff88;transform:translateY(-1px)}
+#workflows .dc-btn:focus-visible,#workflows .dc-controls select:focus-visible{outline:2px solid #00d4ff;outline-offset:3px}
+#workflows .dc-node rect{transition:stroke .2s,fill .2s,filter .2s}
+#workflows .dc-rail-leaf rect{fill:#102c3b;stroke:#00d4ff;stroke-width:1.2}
+#workflows .dc-rail-leaf text:first-of-type{fill:#e6f8ff;font-weight:700}
+#workflows .dc-rail-link{stroke:#00d4ff;stroke-width:1.3;opacity:.9}
+#workflows .dc-rail-link.plane-b{stroke:#ff00ff;stroke-dasharray:3 4}
+#workflows .dc-flow-line{stroke-width:4;stroke-dasharray:10 12;filter:drop-shadow(0 0 5px currentColor);animation:dc-rail-pulse .8s linear infinite}
+#workflows .dc-flow-line.route-compute{stroke:#00d4ff;color:#00d4ff}
+#workflows .dc-flow-line.route-storage{stroke:#00ff88;color:#00ff88}
+#workflows .dc-flow-line.route-object{stroke:#ff00ff;color:#ff00ff}
+#workflows .dc-flow-line.route-control{stroke:#ffb86b;color:#ffb86b}
+#workflows .dc-packet{stroke-width:1.5;filter:drop-shadow(0 0 7px currentColor)}
+#workflows .dc-node[data-dc-node="parallel"] rect{stroke:#00ff88}
+#workflows .dc-node[data-dc-node="firewall"] rect{stroke:#ff3366}
+#workflows .dc-node[data-dc-node="oob"] rect{stroke:#ff00ff}
+#workflows .dc-note{border-top:1px solid #233744;padding-top:14px}
+@keyframes dc-rail-pulse{to{stroke-dashoffset:-44}}
+@media(max-width:600px){#workflows .dc-controls select{width:100%;min-width:0}#workflows .dc-btn{flex:1}#workflows .dc-controls>div{display:flex;width:100%;gap:8px}}
+@media(prefers-reduced-motion:reduce){#workflows .dc-flow-line{animation:none;stroke-dasharray:none}}

@@ -25,13 +25,13 @@ if(dc){
  lb:['LOAD BALANCER / S3 API','Publishes approved HTTPS and S3 API endpoints. S3 client traffic follows the service/tenant network and object gateway path, not the parallel-filesystem data path.'],
  service:['IN-BAND SERVICE NETWORK','Ethernet service plane for user access, provisioning, control-plane services, repositories, monitoring and approved data movement. Segment management and tenant traffic with VLANs/VRFs and policy.'],
  login:['LOGIN / BASTION','Users authenticate here, stage code and submit jobs. Compute nodes should normally be allocated through the scheduler, not treated as general-purpose login hosts.'],
- scheduler:['SCHEDULER / CLUSTER MANAGEMENT','Slurm controller/accounting and provisioning services manage allocation, job lifecycle, images and node state. HA design, database dependencies and controller reachability need validation.'],
+ scheduler:['SCHEDULER / PXE PROVISIONING','Slurm manages allocations and job lifecycle. Provisioning services such as BCM, PXE/iPXE and image management bring nodes to a known OS/driver baseline; exact boot flow depends on the deployment. Keep provisioning/control traffic on the service plane, separate from GPU collectives and storage payloads.'],
  observability:['TELEMETRY / FABRIC MANAGEMENT','Correlate DCGM GPU telemetry, node health, scheduler events, NIC counters, fabric congestion and storage client/server metrics. UFM applies only to supported InfiniBand environments.'],
- oob:['OUT-OF-BAND MANAGEMENT','Separate BMC/IPMI, console, switch management and rack-PDU paths from user/data networks. Restrict access through management bastions and role-based policy.'],
+ oob:['OOB / BMC MANAGEMENT','Dedicated out-of-band management connects BMC/IPMI, serial console, switch management and rack PDU. Keep it isolated from the user, compute and storage fabrics; restrict access through a management bastion, MFA and role-based policy.'],
  securityzone:['SEGMENTATION / IDENTITY','Define tenant, compute, storage, service and OOB trust boundaries. Use MFA/RBAC, audit logs, restricted management access and explicit service ACLs.'],
- spine:['COMPUTE SPINE PLANES A/B','Rail-optimized fat-tree or equivalent design maps GPU/NIC rail groups through leaf and spine tiers. Non-blocking behavior cannot be inferred from a diagram; calculate oversubscription from port counts and rates.'],
- leaf:['COMPUTE RAIL LEAF','A logical rail attachment point for node NIC/HCA ports. Real rail design depends on NIC count, GPU-to-NIC affinity, switch ports, dual-plane wiring, link rates and vendor topology.'],
- gpu:['GPU SERVER / 8-GPU MODEL','Each illustrated server has eight GPUs. Inside-node traffic may use NVLink/NVSwitch; GPU-to-NIC paths traverse PCIe/NUMA and compatible GPUDirect RDMA paths when supported. Confirm the actual server topology.'],
+ spine:['TAN / COMPUTE FAT-TREE SPINE','Rail-optimized fat-tree maps node NIC/HCA rails through leaf and spine tiers, with logical planes A/B. Actual non-blocking behavior depends on port counts, link rates, oversubscription, ECMP/adaptive routing and the deployed switch design; verify against the physical BOM.'],
+ leaf:['TAN LEAF / RAIL ATTACHMENT','Each rail maps a node NIC/HCA port through a leaf tier toward the corresponding spine plane. Validate NIC count, GPU-to-NIC affinity, port mapping, A/B diversity, link rate, cabling and actual switch topology.'],
+ gpu:['GPU SERVER / CPU + 8-GPU MODEL','Each illustrated server contains CPUs, host memory, PCIe/NUMA, NIC/HCA and eight GPUs. Intra-node collectives may use NVLink/NVSwitch; inter-node payloads traverse the selected rail. GPUDirect RDMA and GDS are conditional paths that must be validated on the real stack.'],
  storagefabric:['STORAGE FABRIC LEAF','A separate high-speed storage fabric isolates shared-filesystem traffic from GPU collective traffic where the design provides independent fabrics. The transport may be InfiniBand or RoCE depending on the deployed platform.'],
  storagespine:['STORAGE FABRIC SPINE','Storage fabric capacity must be sized to aggregate client demand and storage target throughput. Validate oversubscription, congestion, path redundancy and switch/NIC compatibility.'],
  parallel:['PARALLEL FILESYSTEM / 2 PB','Conceptual Lustre-style roles: MGS configuration service, MDS/MDT metadata, OSS/OST bulk data. Actual product may differ (WEKA, Lustre/EXAScaler, IBM Storage Scale); map to the deployed platform rather than assuming identical internals.'],
@@ -39,18 +39,20 @@ if(dc){
  control:['JOB CONTROL PATH','User → login/bastion → Slurm submission/controller → scheduler allocation → node launch/runtime. This is a control path, separate from high-volume GPU collective and storage payload paths.']
  };
  const paths={
- // Storage read: filesystem targets → storage spine/leaf → client-side storage NIC → GPU server.
- training:{d:'M715 792H385H120V700H738V570',cls:'route-storage',key:'parallel',stage:3},
- // Collective traffic remains on the compute fabric between two GPU servers.
- collective:{d:'M738 570V497H688V424H988V451H1043V522',cls:'route-compute',key:'spine',stage:2},
- // Checkpoint write follows the reverse client-to-filesystem path.
- checkpoint:{d:'M738 570V700H120V792H385H715',cls:'route-storage',key:'parallel',stage:3},
- // HTTPS/S3 request path through the edge security boundary and service network.
+ // Read payload: OSTs → storage spine → storage leaf → client storage rail → CPU/PCIe/GPU.
+ training:{d:'M715 792H470H300H220V700H738V570',cls:'route-storage',key:'parallel',stage:3},
+ // NCCL collective: GPU server → rail leaf → TAN spine → peer rail leaf → peer GPU.
+ collective:{d:'M738 570V470H688V424V388H988V424V470V522',cls:'route-compute',key:'spine',stage:2},
+ // Checkpoint payload follows the same storage path in the opposite direction.
+ checkpoint:{d:'M738 570V700H220V792H300H470H715',cls:'route-storage',key:'parallel',stage:3},
+ // PXE/iPXE boot and image delivery are service/control traffic, not GPU data-plane traffic.
+ pxe:{d:'M835 112V150H155V178V256H155V270H88V352V432V522',cls:'route-control',key:'scheduler',stage:1},
+ // S3 client request crosses the edge firewall/API service, then reaches the object endpoint.
  object:{d:'M85 80H265H455H645H835V150H1105V752',cls:'route-object',key:'s3',stage:0},
- // User submission to Slurm, then logical job-launch/control reachability to a compute node.
- control:{d:'M1022 80V150H155V178H290V270H1260V510H738V522',cls:'route-control',key:'scheduler',stage:1},
- // Isolated OOB path is routed around the diagram edge to the server management boundary.
- oob:{d:'M735 256V270H1260V970H640V958',cls:'route-control',key:'oob',stage:1}
+ // Job control: login/bastion → scheduler → allocation and node launch.
+ control:{d:'M1022 80V150H155V178V256H155V270H738V522',cls:'route-control',key:'scheduler',stage:1},
+ // Isolated BMC/IPMI path is shown separately from user, compute and storage data paths.
+ oob:{d:'M735 256H1260V970H640V958',cls:'route-control',key:'oob',stage:1}
  };
  // Build eight logical rail groups and two visual planes; exact physical switch counts intentionally omitted.
  const railXs=[88,238,388,538,688,838,988,1138];
@@ -58,7 +60,7 @@ if(dc){
   const x=railXs[i],g=svg('g',{class:'dc-rail-leaf','data-dc-node':'leaf',tabindex:'0',role:'button','aria-label':'Compute rail '+i});
   g.appendChild(svg('rect',{x:x-53,y:432,width:106,height:38,rx:4}));
   g.appendChild(svg('text',{x,y:447,'text-anchor':'middle'},'RAIL '+i));
-  g.appendChild(svg('text',{x,y:461,'text-anchor':'middle'},'LEAF / PLANE A+B'));
+  g.appendChild(svg('text',{x,y:461,'text-anchor':'middle'},'TAN LEAF · PLANES A/B'));
   leafGroup.appendChild(g);
   linkGroup.appendChild(svg('path',{d:`M${x} 424V432 M${x} 470V522`,class:'dc-rail-link'}));
   linkGroup.appendChild(svg('path',{d:`M${x+3} 424V432 M${x+3} 470V522`,class:'dc-rail-link plane-b'}));
