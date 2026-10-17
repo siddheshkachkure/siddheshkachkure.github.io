@@ -302,3 +302,29 @@ button{cursor:pointer} .dc-btn,.dc-controls select,.layer,.gds-mode,.skill-tab,.
 @keyframes dc-rail-pulse{to{stroke-dashoffset:-44}}
 @media(max-width:600px){#workflows .dc-controls select{width:100%;min-width:0}#workflows .dc-btn{flex:1}#workflows .dc-controls>div{display:flex;width:100%;gap:8px}}
 @media(prefers-reduced-motion:reduce){#workflows .dc-flow-line{animation:none;stroke-dasharray:none}}
+
+/* Minimal static HPC architecture diagram */
+.architecture-section .section-head{margin-bottom:24px}
+.architecture-card{border:1px solid #2a2a3a;background:#12121a;padding:clamp(12px,2.5vw,24px);border-radius:8px}
+.architecture-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#6b7280;font:10px/1.5 "JetBrains Mono","Fira Code",monospace;letter-spacing:.12em;margin-bottom:14px}
+.architecture-diagram{display:block;width:100%;height:auto;border:1px solid #2a2a3a;border-radius:6px;background:#0a0a0f}
+.architecture-diagram text{font-family:"JetBrains Mono","Fira Code",Consolas,monospace;fill:#e0e0e0}
+.architecture-diagram .arch-kicker{font-size:11px;letter-spacing:.08em;fill:#00d4ff}
+.architecture-diagram .arch-label{font-size:10px;fill:#d7dce3}
+.architecture-diagram .arch-small{font-size:11px;fill:#9ca3af}
+.architecture-diagram .arch-box rect{fill:#12121a;stroke:#00d4ff;stroke-width:1.2}
+.architecture-diagram .arch-control rect{stroke:#ff00ff}
+.architecture-diagram .arch-control .arch-kicker{fill:#ff00ff}
+.architecture-diagram .arch-oob rect{stroke:#ff3366;stroke-dasharray:5 4}
+.architecture-diagram .arch-oob .arch-kicker{fill:#ff6688}
+.architecture-diagram .arch-switch rect{fill:#101c28;stroke:#00d4ff;stroke-width:1.2}
+.architecture-diagram .arch-node rect{fill:#12121a;stroke:#7b8794;stroke-width:1}
+.architecture-diagram .arch-node .arch-kicker{fill:#00ff88}
+.architecture-diagram .arch-storage rect{fill:#10251e;stroke:#00ff88;stroke-width:1.4}
+.architecture-diagram .arch-storage .arch-kicker{fill:#00ff88}
+.architecture-diagram .arch-link{fill:none;stroke:#00d4ff;stroke-width:1.5}
+.architecture-diagram .arch-control-link{fill:none;stroke:#ff00ff;stroke-width:1.3;stroke-dasharray:5 4}
+.architecture-diagram .arch-oob-link{fill:none;stroke:#ff3366;stroke-width:1.3;stroke-dasharray:4 5}
+.architecture-diagram .arch-storage-link{fill:none;stroke:#00ff88;stroke-width:1.5;stroke-dasharray:6 4}
+.architecture-note{margin:14px 0 0;color:#9ca3af;font-size:12px;line-height:1.7}
+@media(max-width:640px){.architecture-card{padding:10px}.architecture-meta{font-size:9px}.architecture-diagram .arch-kicker{font-size:12px}.architecture-diagram .arch-label{font-size:11px}.architecture-diagram .arch-small{font-size:12px}}
